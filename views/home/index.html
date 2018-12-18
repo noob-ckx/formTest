@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,50 +8,393 @@
     <title>Document</title>
     <link rel="stylesheet" href="../../layuiadmin/layui/css/layui.css" media="all">
     <link rel="stylesheet" href="../../layuiadmin/style/admin.css" media="all">
+    <style>
+        .dragInput{
+            padding: 10px;
+            cursor: pointer;
+        }
+        .layui-form-item{
+            margin: 0px;
+            padding: 10px;
+        }
+        #ckecked{
+            border:1px solid red;
+        }
+        /* .layui-form-label {
+            line-height: 53px;
+        }
+        .layui-input-block {
+            line-height: 53px;
+        } */
+    </style>
 </head>
+
 <body>
     <div class="layui-fluid">
         <div class="layui-row layui-col-space10">
-            <div class="layui-col-md4">
+            <div class="layui-col-md2">
                 <div class="layui-card">
                     <div class="layui-card-header">
                         控件区
                     </div>
                     <div class="layui-card-body">
-
+                        <div class="layui-row">
+                            <div class="layui-col-md6 dragInput" data-method="data" type="1">
+                                输入框
+                            </div>
+                            <div class="layui-col-md6 dragInput" data-method="data" type="2">
+                                下拉框
+                            </div>
+                            <div class="layui-col-md6 dragInput" data-method="data" type="3">
+                                复选框
+                            </div>
+                            <div class="layui-col-md6 dragInput" data-method="data" type="4">
+                                单选框
+                            </div>
+                            <div class="layui-col-md6 dragInput" data-method="data" type="5">
+                                文本域
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="layui-col-md8">
+            <div class="layui-col-md6">
                 <div class="layui-card">
                     <div class="layui-card-header">
                         内容区
                     </div>
                     <div class="layui-card-body">
-                        <form class="layui-form" id="testForm">
+                        <form class="layui-form" id="formView" lay-filter="formView">
 
                         </form>
                     </div>
                 </div>
             </div>
+            <div class="layui-col-md4">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        属性区
+                    </div>
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="configView" lay-filter="configView">
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+    <script type="text/html" id="formTpl">
+        <div class="layui-row">
+        {{# layui.each(d, function(index, item){ }}
+        <div class="layui-col-md12 viewInput" index="{{index}}" data-method="config">
+            {{# if(item.type == 1){ }}
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{{item.name == ''?'输入框':item.name}}</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="{{item.field}}" {{item.required?"required lay-verify='required'":""}}  placeholder="{{item.placeholder}}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            {{# }else if(item.type == 2){ }}
+                <div class="layui-form-item ">
+                    <label class="layui-form-label">{{item.name == ''?'选择框':item.name}}</label>
+                    <div class="layui-input-block">
+                        <select name="{{item.field}}" {{item.required?"required lay-verify='required'":""}} class="select">
+                            <option value="">{{item.placeholder}}</option>
+                            {{# layui.each(item.option, function(i, o){ }}
+                            {{# console.log(o) }}
+                            <option value="{{i}}">{{o}}</option>
+                            {{# }) }}
+                        </select>
+                    </div>
+                </div>
+            {{# }else if(item.type == 3){ }}
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{{item.name == ''?'复选框':item.name}}</label>
+                    <div class="layui-input-block">
+                        {{# layui.each(item.option, function(i, o){ }}
+                            <input type="checkbox" name="" title="{{o}}" lay-skin="primary" >
+                        {{# }) }}
+                    </div>
+                </div>
+            {{# }else if(item.type == 4){ }}
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{{item.name == ''?'单选框':item.name}}</label>
+                    <div class="layui-input-block">
+                        {{# layui.each(item.option, function(i, o){ }}
+                            <input type="radio" name="index" value="{{o}}" title="{{o}}">
+                        {{# }) }}
+                    </div>
+                </div>
+            {{# }else if(item.type == 5){ }}
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">{{item.name == ''?'文本域':item.name}}</label>
+                    <div class="layui-input-block">
+                        <textarea name="{{item.field}}" placeholder="{{item.placeholder}}" {{item.required?"required lay-verify='required'":""}} class="layui-textarea"></textarea>
+                    </div>
+                </div>
+            {{# } }}
+        </div>
+        {{# }) }}
+    
+    </div>
+    </script>
+
+    <script type="text/html" id="configTpl">
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称：</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" required  lay-verify="required" placeholder="请输入名称" autocomplete="off" class="layui-input" value="{{d.name}}">
+            </div>
+        </div>
+        {{# if(d.type != 3 && d.type != 4){ }}
+        <div class="layui-form-item">
+            <label class="layui-form-label">是否必填：</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="required" lay-skin="switch" lay-text="是|否" {{d.required?'checked':''}}>
+            </div>
+        </div>
+        {{# } }}
+        {{# if(d.placeholder){ }}
+        <div class="layui-form-item">
+            <label class="layui-form-label">提示语：</label>
+            <div class="layui-input-block">
+                    <input type="text" name="placeholder" placeholder="请输入提示语" autocomplete="off" class="layui-input" value="{{d.placeholder}}">
+            </div>
+        </div>
+        {{# } }}
+        {{# if(d.option){ }}
+        <div id="test" >
+            <div class="layui-form-item">
+                <label class="layui-form-label">可选项</label>
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-sm" type="button" data-method="add">添加</button>
+                </div>
+            </div> 
+            {{# layui.each(d.option,function(index,item){ }}
+            <div class="layui-form-item">
+                <label class="layui-form-label"></label>
+                <div class="layui-input-inline">
+                    <input type="text" name="option[]" value="{{item}}" autocomplete="off" class="layui-input">
+                </div>
+                <button class="layui-btn layui-btn-danger layui-btn-sm" data-method="delete" type="button">删除</button>
+            </div> 
+            {{# }) }}
+        </div>
+        {{# } }}
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-sm" lay-submit lay-filter="submit">立即提交</button>
+            </div>
+        </div>
+
+    </script>
+
     <script src="../../layuiadmin/layui/layui.js"></script>
     <script>
-    layui.config({
-        base: '../layuiadmin/' //静态资源所在路径
-    }).extend({
-        index: 'lib/index' //主入口模块
-    }).use(['index','table','form'],function(){
-        var $ = layui.$,
-            form = layui.form,
-            admin = layui.admin,
-            table = layui.table;
+        var str = new Array();
+
+        var optionElementContainer = document.createElement("div");
+        optionElementContainer.setAttribute("class","layui-form-item");
+
+        var optionElementTitle = document.createElement("label");
+        optionElementTitle.setAttribute("class","layui-form-label");
+
+        var optionElementInputContainer = document.createElement("div");
+        optionElementInputContainer.setAttribute("class","layui-input-inline");
+
+        var optionElementInputInput = document.createElement("input");
+        optionElementInputInput.setAttribute("type","text");
+        optionElementInputInput.setAttribute("name","option[]");
+        optionElementInputInput.setAttribute("class","layui-input");
+        optionElementInputInput.setAttribute("autocomplete","off");
+        optionElementInputInput.setAttribute("placeholder","请输入");
+
+
+        var optionElementInputButton = document.createElement("button");
+        optionElementInputButton.setAttribute("class","layui-btn layui-btn-danger layui-btn-sm");
+        optionElementInputButton.setAttribute("type","button");
+        optionElementInputButton.setAttribute("data-method","delete");
+        var textNode = document.createTextNode("删除");
+        optionElementInputButton.appendChild(textNode);
+
+
+        optionElementInputContainer.appendChild(optionElementInputInput);
+        optionElementContainer.appendChild(optionElementTitle);
+        optionElementContainer.appendChild(optionElementInputContainer);
+        optionElementContainer.appendChild(optionElementInputButton);
+
+        layui.config({
+            base: '../../layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+        }).use(['table', 'form', 'laytpl'], function () {
+            var $ = layui.$,
+                form = layui.form,
+                laytpl = layui.laytpl,
+                table = layui.table;
+            var active = {
+                data: function () {
+                    var i = parseInt($(this).attr("type"));
+                    $("#configView").html("");
+                    switch (i) {
+                        case 1:
+                            str.push({
+                                type: 1,
+                                name: "输入框",
+                                required: true,
+                                placeholder: "请输入",
+                                soRt: str.length + 1,
+                                field: ""
+                            })
+                            break;
+                        case 2:
+                            str.push({
+                                type: 2,
+                                name: "下拉框",
+                                required: false,
+                                placeholder: "请选择",
+                                option: new Array(),
+                                soRt: str.length + 1,
+                                field: ""
+                            })
+                            break;
+                        case 3:
+                            str.push({
+                                type: 3,
+                                name: "复选框",
+                                option: new Array(),
+                                soRt: str.length + 1,
+                                field: ""
+                            })
+                            break;
+                        case 4:
+                            str.push({
+                                type: 4,
+                                name: "单选框",
+                                option: new Array(),
+                                soRt: str.length + 1,
+                                field: ""
+                            })
+                            break;
+                        case 5:
+                            str.push({
+                                type: 5,
+                                name: "文本域",
+                                placeholder: "请输入",
+                                required: false,
+                                soRt: str.length + 1,
+                                field: ""
+                            })
+                            break;
+                        default:
+                            layer.msg("找不到对应的类型");
+                            break;
+                    };
+                    active.renderForm();
+                },
+                renderForm: function () {
+                    str.sort(function (a, b) { return a.soRt - b.soRt });
+                    var getTpl = formTpl.innerHTML
+                        , view = document.getElementById('formView');
+                    laytpl(getTpl).render(str, function (html) {
+                        view.innerHTML = html;
+                    });
+                    form.render(null,"formView");
+                },
+                config:function(){
+                    $(this).attr("id","ckecked");
+                    $(this).siblings().removeAttr("id");
+                    var i = $(this).attr("index");
+                    var getTpl = configTpl.innerHTML
+                        , view = document.getElementById('configView');
+                    laytpl(getTpl).render(str[i], function (html) {
+                        view.innerHTML = html;
+                    });
+                    form.render();
+                },
+                add:function(){
+                    var test = document.getElementById("test");
+                    test.appendChild(optionElementContainer.cloneNode(true))
+                },
+                delete:function(){
+                    $(this).parent().remove();
+                }
+            };
+
+            form.on("submit(submit)",function(data){
+                var i = $("#ckecked").attr("index");
+                var d = data.field;
+                var inputStr = new Array();
+                for(var key in d){
+                    if(/option/ig.test(key)){
+                        inputStr.push(d[key]);
+                    }else{
+                        str[i][key] = d[key];
+                    }
+                };
+
+                if(inputStr.length != 0){
+                    str[i].option = inputStr;
+                }
+                console.log(d)
+                layer.msg("保存成功",{
+                    icon:1,
+                    time:1000
+                },function(){
+                    active.renderForm();
+                    var getTpl = configTpl.innerHTML
+                        , view = document.getElementById('configView');
+                    laytpl(getTpl).render(str[i], function (html) {
+                        view.innerHTML = html;
+                    });
+                    form.render();
+                    $('[index=' + i +']').attr("id","ckecked");
+                })
+                return false;
+            })
 
 
 
+            $(".dragInput").on("click", function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
 
-    });
+            $(".dragInput").on("mouseover", function () {
+                $(this).css("background-color", "#e2e2e2");
+            });
+            $(".dragInput").on("mouseout", function () {
+                $(this).css("background-color", "");
+            });
+
+            $("#formView").on("dblclick",".viewInput", function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+            $("#formView").on("mouseover",".viewInput",function () {
+                $(this).css("background-color", "#e2e2e2");
+            });
+            $("#formView").on("mouseout",".viewInput", function () {
+                $(this).css("background-color", "");
+            });
+
+            $("#configView").on("click",".layui-btn", function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $("#formView").on("click",".select",function(){
+                event.stopPropagation();
+                console.log("aa")
+                return false;
+            })
+
+
+        });
     </script>
+
 </body>
+
 </html>
