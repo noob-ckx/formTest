@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>form</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link th:href="@{/public/layuiadmin/layui/css/layui.css}" rel="stylesheet" />
+    <script th:src="@{/public/layuiadmin/layui/layui.js}"></script>
+
+    <style>
+        .dragInput{
+            padding: 10px;
+            cursor: pointer;
+        }
+        .layui-form-item{
+            margin: 0px;
+            padding: 10px;
+        }
+        #checked{
+            border:1px solid red;
+        }
+    </style>
+
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-md2">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    控件区
+                </div>
+                <div class="layui-card-body" id="comElem">
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    内容区
+                </div>
+                <div class="layui-card-body" id="viewElem">
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    属性区
+                </div>
+                <div class="layui-card-body" id="attrElem">
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script type="text/javascript" data-th-inline="javascript">
+    var root = /*[[${#request.getContextPath()}]]*/"";
+    layui.config({
+        base: root + '/public/layuiadmin/' //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index','table', 'form', 'laytpl','dragForm'], function () {
+        var $ = layui.$,
+            dragForm = layui.dragForm,
+            form = layui.form,
+            laytpl = layui.laytpl,
+            table = layui.table;
+
+
+        dragForm.render({
+            comElem: '#comElem',
+            viewElem: '#viewElem',
+            attrElem: '#attrElem'
+        });
+
+
+
+    });
+
+</script>
+</body>
+</html>
+

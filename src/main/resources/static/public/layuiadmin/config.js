@@ -40,6 +40,7 @@ layui.define(['laytpl', 'layer', 'element', 'util'], function(exports){
 
     //扩展的第三方模块
     ,extend: [
+        'dragForm',
       'echarts', //echarts 核心包
       'echartsTheme', //echarts 主题
       'dltable',

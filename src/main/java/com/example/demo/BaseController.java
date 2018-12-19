@@ -9,4 +9,9 @@ public class BaseController {
     public String index() {
         return "views/index";
     }
+
+    @GetMapping("/test")
+    public String test() {
+        return "views/test";
+    }
 }

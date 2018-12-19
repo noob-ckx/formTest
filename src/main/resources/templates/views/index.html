@@ -9,6 +9,21 @@
           content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <link th:href="@{/public/layuiadmin/layui/css/layui.css}" rel="stylesheet" />
     <script th:src="@{/public/layuiadmin/layui/layui.js}"></script>
+
+    <style>
+        .dragInput{
+            padding: 10px;
+            cursor: pointer;
+        }
+        .layui-form-item{
+            margin: 0px;
+            padding: 10px;
+        }
+        #checked{
+            border:1px solid red;
+        }
+    </style>
+
 </head>
 <body>
 <div class="layui-fluid">
@@ -67,7 +82,7 @@
     </div>
 </div>
 <script type="text/html" id="formTpl">
-    <!-- <div class="layui-row"> -->
+    <div class="layui-row">
     {{# layui.each(d, function(index, item){ }}
     <div class="layui-row viewInput" index="{{index}}" data-method="config">
         <div class="layui-col-md10 " >
@@ -93,11 +108,11 @@
                 </label>
                 <div class="layui-input-block">
                     <select name="{{index}}" {{item.required?"required lay-verify='required'":""}}>
-                    <option value="">{{item.placeholder}}</option>
-                    {{# layui.each(item.option, function(i, o){ }}
-                    {{# console.log(o) }}
-                    <option value="{{i}}">{{o}}</option>
-                    {{# }) }}
+                        <option value="">{{item.placeholder}}</option>
+                        {{# layui.each(item.option, function(i, o){ }}
+                        {{# console.log(o) }}
+                        <option value="{{i}}">{{o}}</option>
+                        {{# }) }}
                     </select>
                 </div>
             </div>
@@ -238,8 +253,9 @@
         base: root + '/public/layuiadmin/' //静态资源所在路径
     }).extend({
         index: 'lib/index' //主入口模块
-    }).use(['index','table', 'form', 'laytpl'], function () {
+    }).use(['index','table', 'form', 'laytpl','dragForm'], function () {
         var $ = layui.$,
+            dragForm = layui.dragForm,
             form = layui.form,
             laytpl = layui.laytpl,
             table = layui.table;
