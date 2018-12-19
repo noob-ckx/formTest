@@ -7,19 +7,28 @@ layui.define(['form','laytpl','layer'], function(exports){
         layer = layui.layer,
         form = layui.form,
         hint = layui.hint(),
-        MOD_NAME = 'dragForm',CHECKED = "checked",
+        MOD_NAME = 'dragForm',
         DRAGINPUT = 'dragInput', COM_EVENT = 'dragForm-com-event',COM_EVENT_NAME = 'addToView',
         DRAGVIEW = 'dragView', VIEW_EVENT = 'dragForm-view-event',VIEW_EVENT_NAME = 'view',VIEW_DEL_EVENT="dragForm-view-del-event",VIEW_EVENT_DEL_NAME = 'del',
+        DRAGTTR = 'dragAttr', ATTR_ADD_EVENT = "dragForm-attr-add-event",ATTR_EVENT_ADD_NAME = 'addOption', ATTR_DEL_EVENT = "dragForm-attr-del-event",ATTR_EVENT_DEL_NAME = 'delOperation',
+        ATTR_SUBMIT_EVENT = 'dragForm-attr-submit-event',ATTR_EVENT_SUBMIT_NAME = 'submitAttr',
 
         //控件区
-        COMPONTENTS = ['<div class="layui-row">','{{# layui.each(d, function(index, item){ }}', '<div class="layui-col-md6 ' + DRAGINPUT +'" ' + COM_EVENT +'="' + COM_EVENT_NAME +'" type="{{item.type}}">' , '{{item.name}}','</div>','{{# }) }}' ,'</div>'].join(''),
+        COMPONTENTS = ['<div class="layui-row">',
+                            '{{# layui.each(d, function(index, item){ }}',
+                                '<div class="layui-col-md6 ' + DRAGINPUT +'" ' + COM_EVENT +'="' + COM_EVENT_NAME +'" type="{{item.type}}">' ,
+                                    '{{item.name}}',
+                                '</div>',
+                            '{{# }) }}' ,
+                        '</div>'].join(''),
 
         //视图区
+        //TODO 优化渲染、可自定义校验
         VIEWS = ['<form class="layui-form" id="dragFormView" lay-filter="dragFormView">',
             '<div class="layui-row">',
                     '{{# layui.each(d, function(index, item){ }}',
-                        '<div class="layui-row ' + DRAGVIEW +'" index="{{index}}" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '">',
-                            '<div class="layui-col-md10" >',
+                        '<div class="layui-row">',
+                            '<div class="layui-col-md10 ' + DRAGVIEW +'"index="{{index}}" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false">',
                                 '{{# if(item.type == 1){ }}',
                                 //输入框
                                         '<div class="layui-form-item">',
@@ -86,7 +95,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                                         '</div>',
                                 '{{# } }}',
                             '</div>',
-                            '<div class="layui-col-md2">',
+                            '<div class="layui-col-md2" style="height: 58px;line-height: 58px;">',
                                 '<button class="layui-btn layui-btn-danger layui-btn-sm" type="button" ' + VIEW_DEL_EVENT +'="' + VIEW_EVENT_DEL_NAME +'" index="{{index}}">删除</button>',
                             '</div>',
                         '</div>',
@@ -97,6 +106,57 @@ layui.define(['form','laytpl','layer'], function(exports){
                         '</div>',
                     '</div>',
         '</div>',
+        '</form>'].join(''),
+
+        //属性区
+        //TODO 优化渲染、可自定义提交按钮
+        ATTR = ['<form class="layui-form" id="configView" lay-filter="configView">',
+                    '<div class="layui-form-item">',
+                        '<label class="layui-form-label">名称：</label>',
+                        '<div class="layui-input-block">',
+                            '<input type="text" name="name" required  lay-verify="required" placeholder="请输入名称" autocomplete="off" class="layui-input" value="{{d.name}}">',
+                        '</div>',
+                    '</div>',
+                    '{{# if(d.type != 3 && d.type != 4){ }}',
+                        '<div class="layui-form-item">',
+                            '<label class="layui-form-label">是否必填：</label>',
+                            '<div class="layui-input-block">',
+                                '<input type="checkbox" name="required" lay-skin="switch" lay-text="是|否" {{d.required?"checked":""}}>',
+                            '</div>',
+                        '</div>',
+                    '{{# } }}',
+                    '{{# if(d.placeholder){ }}',
+                        '<div class="layui-form-item">',
+                            '<label class="layui-form-label">提示语：</label>',
+                            '<div class="layui-input-block">',
+                                '<input type="text" name="placeholder" placeholder="请输入提示语" autocomplete="off" class="layui-input" value="{{d.placeholder}}">',
+                            '</div>',
+                        '</div>',
+                    '{{# } }}',
+                    '{{# if(d.option){ }}',
+                        '<div id="test" >',
+                            '<div class="layui-form-item">',
+                                '<label class="layui-form-label">可选项</label>',
+                                '<div class="layui-input-block">',
+                                    '<button class="layui-btn layui-btn-sm" type="button" ' + ATTR_ADD_EVENT +'="' + ATTR_EVENT_ADD_NAME +'">添加</button>',
+                                '</div>',
+                            '</div>',
+                            '{{# layui.each(d.option,function(index,item){ }}',
+                            '<div class="layui-form-item">',
+                                '<label class="layui-form-label"></label>',
+                                '<div class="layui-input-inline">',
+                                    ' <input type="text" name="option[]" value="{{item}}" autocomplete="off" class="layui-input">',
+                                '</div>',
+                            '<button class="layui-btn layui-btn-danger layui-btn-sm" ' + ATTR_DEL_EVENT +'="' + ATTR_EVENT_DEL_NAME + '" type="button">删除</button>',
+                            '</div>',
+                            '{{# }) }}',
+                        '</div>',
+                    '{{# } }}',
+                    '<div class="layui-form-item">',
+                        '<div class="layui-input-block">',
+                            '<button class="layui-btn layui-btn-sm" type="button" ' + ATTR_SUBMIT_EVENT + '="' + ATTR_EVENT_SUBMIT_NAME + '">保存属性</button>',
+                        '</div>',
+                    '</div>',
         '</form>'].join(''),
 
 
@@ -114,7 +174,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 }
             }else{
                 if( !$(options.viewElem)[0]){
-                    hint.error('The viewElem ID option was not found in the dragForm');
+                    hint.error('The viewElem ID was not found in the dragForm');
                 }
             }
 
@@ -150,10 +210,10 @@ layui.define(['form','laytpl','layer'], function(exports){
                 }else{
                     that.renderView();
                     that.renderCom();
-                    that.renderAttr();
                     //只有渲染了组件区，才开启组件区的监听事件
                     that.comEvents();
                     that.viewEvents();
+                    that.attrEvents();
                 }
             }else{
                 //如果不是设计模式，则判断显示内容ID是否存在，存在则渲染，否则返回
@@ -167,6 +227,20 @@ layui.define(['form','laytpl','layer'], function(exports){
             console.log(options);
         };
 
+        //数据排序
+        Class.prototype.dataSort = function(){
+            var that = this,
+                options = that.config;
+            var len = options.data.length;
+            //先进行一次排序，防止数据库返回数据乱序
+            //在对sort进行重新赋值，删除表单某一个组件时，sort会断层
+            options.data.sort(function (a, b) { return a.soRt - b.soRt });
+            for(var i = 0 ; i < len ;i++){
+                options.data[i].soRt = i;
+            }
+
+        };
+
         //渲染
 
         //组件区渲染
@@ -177,20 +251,26 @@ layui.define(['form','laytpl','layer'], function(exports){
             options.comElem.html(comElem);
 
         };
+        //视图区渲染
         Class.prototype.renderView = function(){
-            var that = this, options = that.config,
-                viewElem = laytpl(VIEWS).render(options.data);
+            var that = this, options = that.config;
+            that.dataSort();
+            var viewElem = laytpl(VIEWS).render(options.data);
             options.viewElem.html(viewElem);
             //借助layui.form重新渲染视图区
-            form.render();
+            form.render(null,'dragFormView');
 
         };
-        Class.prototype.renderAttr = function(){
-
+        //属性区渲染
+        Class.prototype.renderAttr = function(i){
+            var that = this, options = that.config;
+            var attrElem = laytpl(ATTR).render(options.data[i]);
+            options.attrElem.html(attrElem);
+            form.render(null,'configView');
         };
+
 
         //事件处理
-
         //组件区事件
         Class.prototype.comEvents = function(){
             var that = this,options = that.config;
@@ -202,7 +282,6 @@ layui.define(['form','laytpl','layer'], function(exports){
             });
             options.comElem.on('click', '*[' + COM_EVENT +']', function(e){
                 var othis = $(this),events = othis.attr(COM_EVENT),i = parseInt(othis.attr("type"));
-                console.log(events,i);
                 //只进行数据的添加，渲染交给laytpl
                 //注意：必填属性默认为false。复选框、单选框没有必填的属性，为保证数据格式统一，仅在数据中添加了此属性，在实际的运用中并未适使用此属性
                 switch (i) {
@@ -212,7 +291,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                             name: "输入框",
                             required: false,
                             placeholder: "请输入",
-                            soRt: options.data.length + 1,
+                            soRt: options.data.length,
                             field: ""
                         });
                         break;
@@ -223,7 +302,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                             required: false,
                             placeholder: "请选择",
                             option: new Array(),
-                            soRt: options.data.length + 1,
+                            soRt: options.data.length,
                             field: ""
                         });
                         break;
@@ -233,7 +312,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                             name: "复选框",
                             option: new Array(),
                             required: false,
-                            soRt: options.data.length + 1,
+                            soRt: options.data.length,
                             field: ""
                         });
                         break;
@@ -243,7 +322,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                             name: "单选框",
                             option: new Array(),
                             required: false,
-                            soRt: options.data.length + 1,
+                            soRt: options.data.length,
                             field: ""
                         });
                         break;
@@ -253,7 +332,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                             name: "文本域",
                             placeholder: "请输入",
                             required: false,
-                            soRt: options.data.length + 1,
+                            soRt: options.data.length,
                             field: ""
                         });
                         break;
@@ -263,28 +342,49 @@ layui.define(['form','laytpl','layer'], function(exports){
                 };
                 //每次数据更新后，重新渲染视图区
                 that.renderView();
-                console.log(options.data)
             });
         };
+        //视图区事件
         Class.prototype.viewEvents = function(){
             var that = this,options = that.config;
             options.viewElem.on('mouseover', '.'+ DRAGVIEW, function(e){
-                $(this).css("background-color", "#e2e2e2");
+                $(this).parent().css("background-color", "#e2e2e2");
                 e.stopPropagation();
             });
             options.viewElem.on('mouseout', '.'+ DRAGVIEW, function(e){
-                $(this).css("background-color", "");
+                $(this).parent().css("background-color", "");
                 e.stopPropagation();
             });
-            //同一个元素上含有不的事件，但event
-
+            //视图区删除事件
             options.viewElem.on('click',  '*[' + VIEW_DEL_EVENT +']', function(e){
-                console.log("a");
+                var i = $(this).attr("index");
+                options.data.splice(i,1);
+                //重新渲染视图区
+                that.renderView();
                 e.stopPropagation();
-
             });
             options.viewElem.on('dblclick','*[' + VIEW_EVENT +']', function(e){
-                console.log("b");
+                $(this).parent().addClass("layui-bg-blue");
+                $(this).parent().siblings().removeClass("layui-bg-blue");
+                var i = $(this).attr("index");
+                that.renderAttr(i);
+                e.stopPropagation();
+            });
+        };
+        //属性区事件
+        Class.prototype.attrEvents = function(){
+            var that = this,options = that.config;
+            options.attrElem.on('click',  '*[' + ATTR_ADD_EVENT +']', function(e){
+                console.log("添加")
+                e.stopPropagation();
+            });
+            options.attrElem.on('click',  '*[' + ATTR_DEL_EVENT +']', function(e){
+                console.log("删除")
+                e.stopPropagation();
+            });
+            options.attrElem.on('click',  '*[' + ATTR_SUBMIT_EVENT +']', function(e){
+                console.log("提交");
+                console.log($("#configView").serializeArray());
                 e.stopPropagation();
             });
         };
