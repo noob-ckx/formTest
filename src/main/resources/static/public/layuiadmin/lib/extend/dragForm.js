@@ -25,7 +25,6 @@ layui.define(['form','laytpl','layer'], function(exports){
         //视图区
         //TODO 优化渲染、可自定义校验
         VIEWS = ['<form class="layui-form" id="dragFormView" lay-filter="dragFormView">',
-            '<div class="layui-row">',
                     '{{# layui.each(d, function(index, item){ }}',
                         '<div class="layui-row">',
                             '<div class="layui-col-md10 ' + DRAGVIEW +'"index="{{index}}" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false">',
@@ -100,12 +99,13 @@ layui.define(['form','laytpl','layer'], function(exports){
                             '</div>',
                         '</div>',
                     '{{# }) }}',
-                    '<div class="layui-form-item">',
-                        '<div class="layui-input-block">',
-                            '<button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>',
+                        '<div class="layui-row">',
+                                '<div class="layui-form-item">',
+                                    '<div class="layui-input-block">',
+                                        '<button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>',
+                                    '</div>',
+                                '</div>',
                         '</div>',
-                    '</div>',
-        '</div>',
         '</form>'].join(''),
 
         //属性区
@@ -121,7 +121,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                         '<div class="layui-form-item">',
                             '<label class="layui-form-label">是否必填：</label>',
                             '<div class="layui-input-block">',
-                                '<input type="checkbox" name="required" lay-skin="switch" lay-text="是|否" {{d.required?"checked":""}}>',
+                                '<input type="checkbox" name="required" lay-skin="switch" value="true" lay-text="是|否" {{d.required?"checked":""}}>',
                             '</div>',
                         '</div>',
                     '{{# } }}',
@@ -210,7 +210,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 }else{
                     that.renderView();
                     that.renderCom();
-                    //只有渲染了组件区，才开启组件区的监听事件
+
                     that.comEvents();
                     that.viewEvents();
                     that.attrEvents();
@@ -221,7 +221,6 @@ layui.define(['form','laytpl','layer'], function(exports){
                     return that;
                 }else{
                     that.renderView();
-                    that.viewEvents();
                 }
             }
             console.log(options);
@@ -238,7 +237,6 @@ layui.define(['form','laytpl','layer'], function(exports){
             for(var i = 0 ; i < len ;i++){
                 options.data[i].soRt = i;
             }
-
         };
 
         //渲染
@@ -361,6 +359,8 @@ layui.define(['form','laytpl','layer'], function(exports){
                 options.data.splice(i,1);
                 //重新渲染视图区
                 that.renderView();
+                //清空属性区
+                options.attrElem.html("");
                 e.stopPropagation();
             });
             options.viewElem.on('dblclick','*[' + VIEW_EVENT +']', function(e){
@@ -373,20 +373,63 @@ layui.define(['form','laytpl','layer'], function(exports){
         };
         //属性区事件
         Class.prototype.attrEvents = function(){
-            var that = this,options = that.config;
+            var that = this,options = that.config,
+            _OPTIONS =  ['<div class="layui-form-item">',
+                '<label class="layui-form-label"></label>',
+                '<div class="layui-input-inline">',
+                '<input type="text" name="option[]"  autocomplete="off" class="layui-input">',
+                '</div>',
+                '<button class="layui-btn layui-btn-danger layui-btn-sm" ' + ATTR_DEL_EVENT +'="' + ATTR_EVENT_DEL_NAME + '" type="button">删除</button>',
+                '</div>'].join(''),
+
+            //jq 中append在IE可能会失效，故将str字符窜转化为dom节点
+            _strToDom = function(){
+                var div = document.createElement("div");
+                if(typeof _OPTIONS == "string")
+                    div.innerHTML = _OPTIONS;
+                return div.childNodes[0].cloneNode(true);
+            },
+            _dataReset = function(formArr){
+                var obj = {
+                    option:new Array()
+                };
+                for(var i = 0 ; i < formArr.length ; i++){
+                    if(/option/ig.test(formArr[i].name)){
+                        obj.option.push(formArr[i].value)
+                    }else{
+                        obj[formArr[i].name] = formArr[i].value
+                    }
+                }
+                if(obj.option.length == 0){
+                    delete obj.option
+                }
+                return obj;
+            };
+
             options.attrElem.on('click',  '*[' + ATTR_ADD_EVENT +']', function(e){
-                console.log("添加")
+                document.getElementById("test").appendChild(_strToDom());
                 e.stopPropagation();
             });
             options.attrElem.on('click',  '*[' + ATTR_DEL_EVENT +']', function(e){
-                console.log("删除")
+                $(this).parent().remove();
                 e.stopPropagation();
             });
             options.attrElem.on('click',  '*[' + ATTR_SUBMIT_EVENT +']', function(e){
-                console.log("提交");
-                console.log($("#configView").serializeArray());
+                var data = _dataReset($("#configView").serializeArray());
+                var index = $(".layui-bg-blue").find(".dragView").attr("index");
+                if(data.required){
+                    data.required = true;
+                }else{
+                    data.required = false;
+                }
+                for(var i in data){
+                    options.data[index][i] = data[i];
+                };
+                that.renderView();
+                options.viewElem.find("form").children().eq(index).addClass("layui-bg-blue");
                 e.stopPropagation();
             });
+
         };
 
 
