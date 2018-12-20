@@ -334,8 +334,12 @@ layui.define(['form','laytpl','layer'], function(exports){
         //视图区事件
         Class.prototype.viewEvents = function(){
 
-            var that = this,options = that.config;
+            var that = this,options = that.config,_flag = true;
 
+
+            options.viewElem.bind('contextmenu',function(e) {
+                return false;
+            });
             options.viewElem.on('mouseover', '.'+ DRAGVIEW, function(e){
                 $(this).parent().css("background-color", "#e2e2e2");
                 e.stopPropagation();
@@ -361,11 +365,57 @@ layui.define(['form','laytpl','layer'], function(exports){
                 that.renderAttr(i);
                 e.stopPropagation();
             });
-            options.viewElem.bind('contextmenu',function(e) {
-                console.log("a")
 
+            options.viewElem.on('mousedown','*[' + VIEW_EVENT +']',function(e) {
+                var _index = $(this).attr("index"),
+                    _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
+                    _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: 58px;border: 1px dashed grey;">');
+
+
+                //拖拽事件中可能所需的数据
+                that.dragData = options.data[_index];
+                that.dragDom = that.JQdomToStr($(this).parent().clone(true));
+                that.placeholder = _PLACEHOLDER;
+                that.mouseX = e.clientX;
+                that.mouseY = e.clientY;
+                that.domX = $(this).parent().offset().left;
+                that.domY = $(this).parent().offset().top;
+                that.relativelyX = that.mouseX - that.domX;
+                that.relativelyY = that.mouseY - that.domY;
+                that.dragDom.setAttribute("style","position:fixed;left:" + that.domX + "px;top:" + that.domY +"px;z-index:999;width:" + $(this).parent().width() +"px");
+
+                //鼠标右键落下
+                if(e.which == 3){
+
+                    options.data.splice(_index,1);
+                    $(this).parent().remove();
+                    if(_flag){
+                        _flag = false;
+                        _viewElemOrgin.insertBefore(_PLACEHOLDER,_viewElemOrgin.children[_index]);
+                        _viewElemOrgin.appendChild(that.dragDom);
+                    }
+
+                    // console.log()
+                    // options.viewElem.on("mousemove",function (e) {
+                    //     that.calculate(e);
+                    // });
+                    $(document).on("mousemove",function (e) {
+
+                            that.calculate(e);
+                    });
+                    // options.viewElem.on("mouseup",function (e) {
+                    //
+                    //     options.viewElem.off("mousemove")
+                    // })
+                    options.viewElem.on("mouseup",function (e) {
+                        _flag = true;
+                        $(document).off("mousemove")
+                    })
+
+                }
                 return false;
             });
+
 
         };
         //属性区事件
@@ -444,6 +494,27 @@ layui.define(['form','laytpl','layer'], function(exports){
                 div.innerHTML = str;
             return div.childNodes[0].cloneNode(true);
         };
+        Class.prototype.JQdomToStr = function(dom){
+            //TODO 脱离layui框架的约束
+            // var str = dom.html();
+            var str = dom.prop("outerHTML");
+            var div = document.createElement("div");
+            if(typeof str == "string")
+                div.innerHTML = str ;
+            return div.childNodes[0].cloneNode(true);
+        };
+
+        //
+        Class.prototype.calculate = function(e){
+            var that = this,
+                nowX = e.clientX,
+                nowY = e.clientY,
+                x = that.domX + nowX - that.mouseX,
+                y = that.domY + nowY - that.mouseY;
+            that.dragDom.style.left = x + "px";
+            that.dragDom.style.top = y + "px";
+        };
+
 
         //核心入口
         dragForm.render = function(options){
