@@ -226,18 +226,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             console.log(options);
         };
 
-        //数据排序
-        Class.prototype.dataSort = function(){
-            var that = this,
-                options = that.config;
-            var len = options.data.length;
-            //先进行一次排序，防止数据库返回数据乱序
-            //在对sort进行重新赋值，删除表单某一个组件时，sort会断层
-            options.data.sort(function (a, b) { return a.soRt - b.soRt });
-            for(var i = 0 ; i < len ;i++){
-                options.data[i].soRt = i;
-            }
-        };
+
 
         //渲染
 
@@ -344,7 +333,9 @@ layui.define(['form','laytpl','layer'], function(exports){
         };
         //视图区事件
         Class.prototype.viewEvents = function(){
+
             var that = this,options = that.config;
+
             options.viewElem.on('mouseover', '.'+ DRAGVIEW, function(e){
                 $(this).parent().css("background-color", "#e2e2e2");
                 e.stopPropagation();
@@ -370,6 +361,12 @@ layui.define(['form','laytpl','layer'], function(exports){
                 that.renderAttr(i);
                 e.stopPropagation();
             });
+            options.viewElem.bind('contextmenu',function(e) {
+                console.log("a")
+
+                return false;
+            });
+
         };
         //属性区事件
         Class.prototype.attrEvents = function(){
@@ -382,13 +379,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 '<button class="layui-btn layui-btn-danger layui-btn-sm" ' + ATTR_DEL_EVENT +'="' + ATTR_EVENT_DEL_NAME + '" type="button">删除</button>',
                 '</div>'].join(''),
 
-            //jq 中append在IE可能会失效，故将str字符窜转化为dom节点
-            _strToDom = function(){
-                var div = document.createElement("div");
-                if(typeof _OPTIONS == "string")
-                    div.innerHTML = _OPTIONS;
-                return div.childNodes[0].cloneNode(true);
-            },
+
             _dataReset = function(formArr){
                 var obj = {
                     option:new Array()
@@ -407,7 +398,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             };
 
             options.attrElem.on('click',  '*[' + ATTR_ADD_EVENT +']', function(e){
-                document.getElementById("test").appendChild(_strToDom());
+                document.getElementById("test").appendChild(that.strToDom(_OPTIONS));
                 e.stopPropagation();
             });
             options.attrElem.on('click',  '*[' + ATTR_DEL_EVENT +']', function(e){
@@ -432,6 +423,27 @@ layui.define(['form','laytpl','layer'], function(exports){
 
         };
 
+        //工具类
+        //数据排序
+        Class.prototype.dataSort = function(){
+            //TODO 排序有BUG
+            var that = this,
+                options = that.config;
+            var len = options.data.length;
+            //先进行一次排序，防止数据库返回数据乱序
+            //在对sort进行重新赋值，删除表单某一个组件时，sort会断层
+            options.data.sort(function (a, b) { return a.soRt - b.soRt });
+            for(var i = 0 ; i < len ;i++){
+                options.data[i].soRt = i;
+            }
+        };
+        //jq 中append在IE可能会失效，故将str字符串转化为dom节点
+        Class.prototype.strToDom = function(str){
+            var div = document.createElement("div");
+            if(typeof str == "string")
+                div.innerHTML = str;
+            return div.childNodes[0].cloneNode(true);
+        };
 
         //核心入口
         dragForm.render = function(options){
