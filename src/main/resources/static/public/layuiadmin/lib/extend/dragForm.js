@@ -337,7 +337,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             var that = this,options = that.config,_flag = true;
 
 
-            options.viewElem.bind('contextmenu',function(e) {
+            $(document).bind('contextmenu',function(e) {
                 return false;
             });
             options.viewElem.on('mouseover', '.'+ DRAGVIEW, function(e){
@@ -367,51 +367,79 @@ layui.define(['form','laytpl','layer'], function(exports){
             });
 
             options.viewElem.on('mousedown','*[' + VIEW_EVENT +']',function(e) {
-                var _index = $(this).attr("index"),
-                    _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
-                    _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: 58px;border: 1px dashed grey;">');
+                if(_flag){
+                    var _index = $(this).attr("index"),
+                        _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
+                        _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: ' + $(this).parent().height() +'px;border: 1px dashed grey;">');
 
+                    //拖拽事件中可能所需的数据
+                    that.newIndex = _index;
+                    that.dragData = options.data[_index];
+                    that.dragDom = that.JQdomToStr($(this).parent().clone(true));
+                    that.placeholder = _PLACEHOLDER;
+                    that.mouseX = e.pageX;
+                    that.mouseY = e.pageY;
+                    that.posotionY = $(this).parent().position().top + $(this).parent().scrollTop();
+                    that.posotionX = $(this).parent().position().left + $(this).parent().scrollLeft();
 
-                //拖拽事件中可能所需的数据
-                that.dragData = options.data[_index];
-                that.dragDom = that.JQdomToStr($(this).parent().clone(true));
-                that.placeholder = _PLACEHOLDER;
-                that.mouseX = e.clientX;
-                that.mouseY = e.clientY;
-                that.domX = $(this).parent().offset().left;
-                that.domY = $(this).parent().offset().top;
-                that.relativelyX = that.mouseX - that.domX;
-                that.relativelyY = that.mouseY - that.domY;
-                that.dragDom.setAttribute("style","position:fixed;left:" + that.domX + "px;top:" + that.domY +"px;z-index:999;width:" + $(this).parent().width() +"px");
+                    that.dragDom.setAttribute("style","position:absolute;left:" + that.posotionX +"px;top:" + that.posotionY +"px;z-index:800;width:" + $(this).parent().width() +"px;background-color:#e2e2e2 ;!important");
 
                 //鼠标右键落下
                 if(e.which == 3){
-
-                    options.data.splice(_index,1);
-                    $(this).parent().remove();
-                    if(_flag){
+                        //TODO 拖拽事件优化
+                        that.rangeX = [options.viewElem.offset().left,options.viewElem.offset().left + options.viewElem.width()];
+                        that.rangeY = [options.viewElem.offset().top ,options.viewElem.offset().top + options.viewElem.height()];
+                        options.data.splice(_index,1);
                         _flag = false;
                         _viewElemOrgin.insertBefore(_PLACEHOLDER,_viewElemOrgin.children[_index]);
+                        $(this).parent().remove();
+                        var otherPosition = options.viewElem.children("form").children("div");
+                        that.centerPosition = new Array();
+                        for(var i = 0 ; i < otherPosition.length-1 ; i++){
+                            if(i == 0){
+                                that.centerPosition.push([options.viewElem.children("form").offset().top,that.calculateCenter(otherPosition[i])]);
+                            };
+                            that.centerPosition.push([that.calculateCenter(otherPosition[i]),that.calculateCenter(otherPosition[i+1])]);
+                        }
+
                         _viewElemOrgin.appendChild(that.dragDom);
-                    }
 
-                    // console.log()
-                    // options.viewElem.on("mousemove",function (e) {
-                    //     that.calculate(e);
-                    // });
-                    $(document).on("mousemove",function (e) {
+                        //设置可编辑区样式
+                        options.viewElem.css("border","5px solid red");
 
+                        $(document).on("mousemove",function (e) {
                             that.calculate(e);
-                    });
-                    // options.viewElem.on("mouseup",function (e) {
-                    //
-                    //     options.viewElem.off("mousemove")
-                    // })
-                    options.viewElem.on("mouseup",function (e) {
-                        _flag = true;
-                        $(document).off("mousemove")
-                    })
+                        });
+                        $(document).on("mouseup",function (e) {
+                            options.data.splice(that.newIndex,0,that.dragData);
+                            $(that.placeholder).remove();
+                            $(that.dragDom).remove();
+                            //重新渲染视图区
+                            that.renderView();
+                            //清空属性区
+                            options.attrElem.html("");
+                            //标志位置空
+                            _flag = true;
+                            //清空监听事件
+                            $(document).off("mousemove");
+                            $(document).off("mouseup");
+                            //移除可编辑区样式
+                            options.viewElem.css("border","");
+                            //清空不必要的缓存
+                            delete that.newIndex;
+                            delete that.dragData;
+                            delete that.dragDom;
+                            delete that.placeholder;
+                            delete that.mouseX;
+                            delete that.mouseY;
+                            delete that.posotionY;
+                            delete that.posotionX;
+                            delete that.centerPosition;
+                            delete that.rangeY;
+                            delete that.rangeX;
 
+                        })
+                }
                 }
                 return false;
             });
@@ -482,7 +510,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             var len = options.data.length;
             //先进行一次排序，防止数据库返回数据乱序
             //在对sort进行重新赋值，删除表单某一个组件时，sort会断层
-            options.data.sort(function (a, b) { return a.soRt - b.soRt });
+            // options.data.sort(function (a, b) { return a.soRt - b.soRt });
             for(var i = 0 ; i < len ;i++){
                 options.data[i].soRt = i;
             }
@@ -504,15 +532,38 @@ layui.define(['form','laytpl','layer'], function(exports){
             return div.childNodes[0].cloneNode(true);
         };
 
-        //
+        //计算拖拽DIV当前位置
         Class.prototype.calculate = function(e){
             var that = this,
-                nowX = e.clientX,
-                nowY = e.clientY,
-                x = that.domX + nowX - that.mouseX,
-                y = that.domY + nowY - that.mouseY;
-            that.dragDom.style.left = x + "px";
-            that.dragDom.style.top = y + "px";
+                options = that.config,
+                _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
+                nowX = e.pageX,
+                nowY = e.pageY,
+                x = that.posotionX + nowX - that.mouseX,
+                y = that.posotionY + nowY - that.mouseY;
+
+            if(nowX > that.rangeX[0] && nowX < that.rangeX[1] && nowY > that.rangeY[0] && nowY < that.rangeY[1]){
+                for(var i = 0 ; i < that.centerPosition.length ; i++){
+                    if(that.centerPosition[i][0] < nowY && that.centerPosition[i][1] > nowY){
+                        _viewElemOrgin.insertBefore(that.placeholder,_viewElemOrgin.children[i]);
+
+                        //BUG fixed 数据刷新时，组件会错位，原因：占位div也占了一个索引，鼠标在占位div上下移动时，
+                        //在div之上则没问题，在div之下，则刷新数据时，默认将数据插入了靠后的索引位置上。因为数据数组并没有占位的数据
+                        if(that.placeholder != _viewElemOrgin.children[i]){
+                            that.newIndex = i-1;
+                        }else{
+                            that.newIndex = i;
+                        }
+
+                    }
+                }
+                that.dragDom.style.left = x + "px";
+                that.dragDom.style.top = y + "px";
+            }
+        };
+        //当前视图区每个div的中心点
+        Class.prototype.calculateCenter = function(item){
+            return $(item).offset().top + $(item).scrollTop() + $(item).height()/2
         };
 
 
