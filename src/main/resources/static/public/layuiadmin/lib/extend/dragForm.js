@@ -7,11 +7,12 @@ layui.define(['form','laytpl','layer'], function(exports){
         layer = layui.layer,
         form = layui.form,
         hint = layui.hint(),
-        MOD_NAME = 'dragForm',
-        DRAGINPUT = 'dragInput', COM_EVENT = 'dragForm-com-event',COM_EVENT_NAME = 'addToView',
-        DRAGVIEW = 'dragView', VIEW_EVENT = 'dragForm-view-event',VIEW_EVENT_NAME = 'view',VIEW_DEL_EVENT="dragForm-view-del-event",VIEW_EVENT_DEL_NAME = 'del',
-        DRAGTTR = 'dragAttr', ATTR_ADD_EVENT = "dragForm-attr-add-event",ATTR_EVENT_ADD_NAME = 'addOption', ATTR_DEL_EVENT = "dragForm-attr-del-event",ATTR_EVENT_DEL_NAME = 'delOperation',
-        ATTR_SUBMIT_EVENT = 'dragForm-attr-submit-event',ATTR_EVENT_SUBMIT_NAME = 'submitAttr',
+        MOD_NAME = 'dragForm',//组件名称
+        VIEW_FORM_NAME = 'dragFormView',//视图区表单名称
+        ATTR_FORM_NAME = 'dragFormAttr',//属性区表单名称
+        DRAGINPUT = 'dragInput', COM_EVENT = 'dragForm-com-event',COM_EVENT_NAME = 'addToView',//组件区事件与事件名
+        DRAGVIEW = 'dragView', VIEW_EVENT = 'dragForm-view-event',VIEW_EVENT_NAME = 'view',VIEW_DEL_EVENT="dragForm-view-del-event",VIEW_EVENT_DEL_NAME = 'del',//视图区事件与事件名
+        DRAGTTR = 'dragAttr', ATTR_ADD_EVENT = "dragForm-attr-add-event",ATTR_EVENT_ADD_NAME = 'addOption', ATTR_DEL_EVENT = "dragForm-attr-del-event",ATTR_EVENT_DEL_NAME = 'delOperation', ATTR_SUBMIT_EVENT = 'dragForm-attr-submit-event',ATTR_EVENT_SUBMIT_NAME = 'submitAttr',//属性区事件与事件名
 
         //控件区
         COMPONTENTS = ['<div class="layui-row">',
@@ -24,7 +25,7 @@ layui.define(['form','laytpl','layer'], function(exports){
 
         //视图区
         //TODO 优化渲染、可自定义校验
-        VIEWS = ['<form class="layui-form" id="dragFormView" lay-filter="dragFormView">',
+        VIEWS = ['<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">',
                     '{{# layui.each(d, function(index, item){ }}',
                         '<div class="layui-row">',
                             '<div class="layui-col-md10 ' + DRAGVIEW +'"index="{{index}}" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false">',
@@ -110,7 +111,7 @@ layui.define(['form','laytpl','layer'], function(exports){
 
         //属性区
         //TODO 优化渲染、可自定义提交按钮
-        ATTR = ['<form class="layui-form" id="configView" lay-filter="configView">',
+        ATTR = ['<form class="layui-form" id="' + ATTR_FORM_NAME + '" lay-filter="' + ATTR_FORM_NAME + '">',
                     '<div class="layui-form-item">',
                         '<label class="layui-form-label">名称：</label>',
                         '<div class="layui-input-block">',
@@ -245,7 +246,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             var viewElem = laytpl(VIEWS).render(options.data);
             options.viewElem.html(viewElem);
             //借助layui.form重新渲染视图区
-            form.render(null,'dragFormView');
+            form.render(null,VIEW_FORM_NAME);
 
         };
         //属性区渲染
@@ -253,7 +254,7 @@ layui.define(['form','laytpl','layer'], function(exports){
             var that = this, options = that.config;
             var attrElem = laytpl(ATTR).render(options.data[i]);
             options.attrElem.html(attrElem);
-            form.render(null,'configView');
+            form.render(null,ATTR_FORM_NAME);
         };
 
 
