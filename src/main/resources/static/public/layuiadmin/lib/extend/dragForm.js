@@ -1,5 +1,3 @@
-
-
 layui.define(['form','laytpl','layer'], function(exports){
     "use strict";
     var $ = layui.$,
@@ -25,6 +23,7 @@ layui.define(['form','laytpl','layer'], function(exports){
 
         //视图区
         //TODO 优化渲染、可自定义校验
+        //已弃用laytpl
         VIEWS = ['<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">',
                     '{{# layui.each(d, function(index, item){ }}',
                         '<div class="layui-row">',
@@ -200,9 +199,15 @@ layui.define(['form','laytpl','layer'], function(exports){
         Class.prototype.render = function(){
             var that = this,
                 options = that.config;
+
+            options.comElemOrgin = options.comElem;
+            options.viewElemOrgin = options.viewElem;
+            options.attrElemOrgin = options.attrElem;
+
             options.comElem = $(options.comElem);
             options.viewElem = $(options.viewElem);
             options.attrElem = $(options.attrElem);
+
 
             //如果是设计模式，则判断三个ID是否存在，存在则渲染，否则返回
             if(options.design){
@@ -241,11 +246,68 @@ layui.define(['form','laytpl','layer'], function(exports){
         };
         //视图区渲染
         Class.prototype.renderView = function(){
-            var that = this, options = that.config;
+            var that = this,
+                options = that.config,
+                str = '',
+                _getStr = function(i,data){
+
+                    str += '<div class="layui-row"><div class="layui-col-md10 ' + DRAGVIEW +'"index="' + i +'" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false"><div class="layui-form-item">';
+
+                    str +=  '<label class="layui-form-label">';
+                    if(data.required){
+                        str += '<span style="color:red">*</span>';
+                    }
+                    str += '<span>' + data.name + '</span>';
+                    str += '</label>';
+
+                    str += '<div class="layui-input-block">';
+                    if(data.type == 'select'){
+                        str += '<select name="' + data.field + '"';
+                        str += data.required?' required lay-verify="required">':'>';
+                        str += '<option value="">' + data.placeholder + '</option>';
+                        for(var i = 0 ; i < data.option.length ; i++){
+                            str += '<option value="' + data.option[i] +'">' + data.option[i] +'</option>';
+                        }
+                        str += '</select>'
+                    }else if(data.type == 'textarea'){
+
+                        str += '<textarea name="' + data.field + '" ';
+                        str += data.required?' required lay-verify="required"':'';
+                        str += data.placeholder?' placeholder="' + data.placeholder + '"':'';
+                        str += ' autocomplete="off" class="layui-textarea"></textarea>';
+
+                    }else if(data.type == 'checkbox' || data.type == 'radio'){
+                        for(var j = 0 ; j < data.option.length ; j++){
+                            str += '<input type="' + data.type +  '"';
+                            str += (data.type == "checkbox")?' name="' + data.field +'[]"':' name="' + data.field + '"';
+                            str += ' title="' + data.option[j] +'"';
+                            str += (data.type == "checkbox")?' lay-skin="primary">':'>';
+                        }
+                    }else{
+                        str += '<input type="' + data.type + '" name="' + data.field + '" ';
+                        str += data.required?' required lay-verify="required"':'';
+                        str += data.placeholder?' placeholder="' + data.placeholder + '"':'';
+                        str += ' autocomplete="off" class="layui-input">';
+                    }
+                    str += '</div>';
+                    str += '</div></div>';
+                    str += '<div class="layui-col-md2" style="height: 58px;line-height: 58px;">';
+                    str += '<button class="layui-btn layui-btn-danger layui-btn-sm" type="button" ' + VIEW_DEL_EVENT +'="' + VIEW_EVENT_DEL_NAME +'" index="' + i +'">删除</button>';
+                    str += '</div>';
+                    str += '</div>';
+                };
+
             that.dataSort();
-            var viewElem = laytpl(VIEWS).render(options.data);
-            options.viewElem.html(viewElem);
-            //借助layui.form重新渲染视图区
+            str += '<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">';
+            for(var i = 0 ; i < options.data.length ; i++){
+                _getStr(i,options.data[i])
+            }
+            str += '</form>';
+
+            document.getElementById(options.viewElemOrgin.replace("#","")).innerHTML = "";
+            document.getElementById(options.viewElemOrgin.replace("#","")).appendChild(that.strToDom(str));
+
+            // //借助layui.form重新渲染视图区
             form.render(null,VIEW_FORM_NAME);
 
         };
@@ -275,7 +337,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 switch (i) {
                     case 1:
                         options.data.push({
-                            type: 1,
+                            type: 'text',
                             name: "输入框",
                             required: false,
                             placeholder: "请输入",
@@ -285,7 +347,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                         break;
                     case 2:
                         options.data.push({
-                            type: 2,
+                            type: 'select',
                             name: "下拉框",
                             required: false,
                             placeholder: "请选择",
@@ -296,7 +358,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                         break;
                     case 3:
                         options.data.push({
-                            type: 3,
+                            type: 'checkbox',
                             name: "复选框",
                             option: new Array(),
                             required: false,
@@ -306,7 +368,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                         break;
                     case 4:
                         options.data.push({
-                            type: 4,
+                            type: 'radio',
                             name: "单选框",
                             option: new Array(),
                             required: false,
@@ -316,7 +378,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                         break;
                     case 5:
                         options.data.push({
-                            type: 5,
+                            type: 'textarea',
                             name: "文本域",
                             placeholder: "请输入",
                             required: false,
@@ -485,7 +547,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 e.stopPropagation();
             });
             options.attrElem.on('click',  '*[' + ATTR_SUBMIT_EVENT +']', function(e){
-                var data = _dataReset($("#configView").serializeArray());
+                var data = _dataReset($("#" + ATTR_FORM_NAME +"").serializeArray());
                 var index = $(".layui-bg-blue").find(".dragView").attr("index");
                 if(data.required){
                     data.required = true;
