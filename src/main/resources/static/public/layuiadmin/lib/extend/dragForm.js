@@ -12,6 +12,7 @@ layui.define(['form','laytpl','layer'], function(exports){
         DRAGVIEW = 'dragView', VIEW_EVENT = 'dragForm-view-event',VIEW_EVENT_NAME = 'view',VIEW_DEL_EVENT="dragForm-view-del-event",VIEW_EVENT_DEL_NAME = 'del',//视图区事件与事件名
         DRAGTTR = 'dragAttr', ATTR_ADD_EVENT = "dragForm-attr-add-event",ATTR_EVENT_ADD_NAME = 'addOption', ATTR_DEL_EVENT = "dragForm-attr-del-event",ATTR_EVENT_DEL_NAME = 'delOperation', ATTR_SUBMIT_EVENT = 'dragForm-attr-submit-event',ATTR_EVENT_SUBMIT_NAME = 'submitAttr',//属性区事件与事件名
 
+
         //控件区
         COMPONTENTS = ['<div class="layui-row">',
                             '{{# layui.each(d, function(index, item){ }}',
@@ -20,10 +21,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                                 '</div>',
                             '{{# }) }}' ,
                         '</div>'].join(''),
-
         //视图区
-        //TODO 优化渲染、可自定义校验
-        //已弃用laytpl
         VIEWS = ['<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">',
                     '{{# layui.each(d, function(index, item){ }}',
                         '<div class="layui-row">',
@@ -107,9 +105,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                                 '</div>',
                         '</div>',
         '</form>'].join(''),
-
         //属性区
-        //TODO 优化渲染、可自定义提交按钮
         ATTR = ['<form class="layui-form" id="' + ATTR_FORM_NAME + '" lay-filter="' + ATTR_FORM_NAME + '">',
                     '<div class="layui-form-item">',
                         '<label class="layui-form-label">名称：</label>',
@@ -194,16 +190,15 @@ layui.define(['form','laytpl','layer'], function(exports){
             data:new Array(),
             design:true,//是否为设计模式标志位
             //TODO 类型可由用户自行配置
-            type:[{name:'输入框',type:1},{name:'下拉框',type:2},{name:'复选框',type:3},{name:'单选框',type:4},{name:'文本域',type:5}]
+            type:[{name:'输入框',type:'text'},{name:'下拉框',type:'select'},{name:'复选框',type:'checkbox'},{name:'单选框',type:'radio'},{name:'文本域',type:'textarea'}]
         };
         Class.prototype.render = function(){
             var that = this,
                 options = that.config;
 
-            options.comElemOrgin = options.comElem;
-            options.viewElemOrgin = options.viewElem;
-            options.attrElemOrgin = options.attrElem;
-
+            options.comElemOrgin = document.getElementById(options.comElem.replace("#",""));
+            options.viewElemOrgin = document.getElementById(options.viewElem.replace("#",""));
+            options.attrElemOrgin = document.getElementById(options.attrElem.replace("#",""));
             options.comElem = $(options.comElem);
             options.viewElem = $(options.viewElem);
             options.attrElem = $(options.attrElem);
@@ -214,8 +209,8 @@ layui.define(['form','laytpl','layer'], function(exports){
                 if(!options.comElem[0] || !options.viewElem[0] || !options.attrElem[0]){
                     return that;
                 }else{
-                    that.renderView();
                     that.renderCom();
+                    that.renderView();
 
                     that.comEvents();
                     that.viewEvents();
@@ -240,8 +235,18 @@ layui.define(['form','laytpl','layer'], function(exports){
         Class.prototype.renderCom = function(){
             var that = this,
                 options = that.config,
-                comElem = laytpl(COMPONTENTS).render(options.type);
-            options.comElem.html(comElem);
+                str = "",
+                _getStr = function(i,data){
+                    str += '<div class="layui-col-md6" ' + COM_EVENT +'="' + COM_EVENT_NAME +'" type="' + data.type +'">';
+                    str += data.name;
+                    str += '</div>'
+                };
+            str += '<div class="layui-row">';
+            for(var i = 0 ; i < options.type.length ; i++){
+                _getStr(i,options.type[i]);
+            };
+            str += '</div>';
+            options.comElemOrgin.innerHTML = str;
 
         };
         //视图区渲染
@@ -296,100 +301,107 @@ layui.define(['form','laytpl','layer'], function(exports){
                     str += '</div>';
                     str += '</div>';
                 };
-
             that.dataSort();
             str += '<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">';
             for(var i = 0 ; i < options.data.length ; i++){
                 _getStr(i,options.data[i])
             }
             str += '</form>';
-
-            document.getElementById(options.viewElemOrgin.replace("#","")).innerHTML = "";
-            document.getElementById(options.viewElemOrgin.replace("#","")).appendChild(that.strToDom(str));
-
+            options.viewElemOrgin.innerHTML = str;
             // //借助layui.form重新渲染视图区
             form.render(null,VIEW_FORM_NAME);
 
         };
         //属性区渲染
         Class.prototype.renderAttr = function(i){
-            var that = this, options = that.config;
-            var attrElem = laytpl(ATTR).render(options.data[i]);
-            options.attrElem.html(attrElem);
+            var that = this,
+                options = that.config,
+                str = "",
+                _getStr = function(data){
+                    //名称
+                    str += '<div class="layui-form-item"><label class="layui-form-label">名称：</label><div class="layui-input-block"><input type="text" name="name" required  lay-verify="required" placeholder="请输入名称" autocomplete="off" class="layui-input" value="' + data.name +'"></div></div>';
+                    //checkbox和radio没有是否必填和提示语
+                    if(data.type != 'checkbox' && data.type != 'radio'){
+                        //是否必填
+                        str += '<div class="layui-form-item"><label class="layui-form-label">是否必填：</label><div class="layui-input-block">';
+                        str += '<input type="checkbox" name="required" lay-skin="switch" value="true" lay-text="是|否"';
+                        str += data.required?"checked>":">";
+                        str += '</div></div>';
+                        //提示语
+                        str +=  '<div class="layui-form-item"><label class="layui-form-label">提示语：</label><div class="layui-input-block">';
+                        str += '<input type="text" name="placeholder" placeholder="请输入提示语" autocomplete="off" class="layui-input" value="' + data.placeholder +'">';
+                        str += '</div></div>';
+                    }
+                    //checkbox、radio和select有可选项
+                    if(data.type == 'checkbox' || data.type == 'radio' || data.type == 'select'){
+                        str += '<div class="layui-form-item"><label class="layui-form-label">可选项</label><div class="layui-input-block"><button class="layui-btn layui-btn-sm" type="button" ' + ATTR_ADD_EVENT +'="' + ATTR_EVENT_ADD_NAME +'">添加</button></div></div>';
+                        if(data.option.length !=0){
+                            for(var i = 0 ; i < data.option.length ;i++){
+                                str += '<div class="layui-form-item"><label class="layui-form-label"></label><div class="layui-input-inline"><input type="text" name="option[]" value="' + data.option[i] +'" autocomplete="off" class="layui-input"></div><button class="layui-btn layui-btn-danger layui-btn-sm" ' + ATTR_DEL_EVENT +'="' + ATTR_EVENT_DEL_NAME + '" type="button">删除</button></div>';
+                            }
+                        }else{
+                            str += '<div class="layui-form-item"><label class="layui-form-label"></label><div class="layui-input-inline"><input type="text" name="option[]" value="请输入选项" autocomplete="off" class="layui-input"></div><button class="layui-btn layui-btn-danger layui-btn-sm" ' + ATTR_DEL_EVENT +'="' + ATTR_EVENT_DEL_NAME + '" type="button">删除</button></div>';
+                        }
+                    }
+
+                    //保存属性按钮
+                    str += '<div class="layui-form-item"><div class="layui-input-block"><button class="layui-btn layui-btn-sm" type="button" ' + ATTR_SUBMIT_EVENT + '="' + ATTR_EVENT_SUBMIT_NAME + '">保存属性</button></div></div>';
+                };
+            str += '<form class="layui-form" id="' + ATTR_FORM_NAME + '" lay-filter="' + ATTR_FORM_NAME + '">';
+            _getStr(options.data[i]);
+            str += '</form>';
+            // var attrElem = laytpl(ATTR).render(options.data[i]);
+            // options.attrElem.html(attrElem);
+            options.attrElemOrgin.innerHTML = str;
             form.render(null,ATTR_FORM_NAME);
         };
 
+
+        //复写事件委托，并兼容IE
+        Class.prototype.addEventHandler = function(target,selector,type,fn){
+            var _eventfn = function(e){
+                var e = e || window.event;
+                var t = e.target || e.srcElement;
+                var _recursive = function(elem){
+                    if(elem.getAttribute(selector)){
+                        fn.call(elem,e);
+                    }else{
+                        if(elem.parentNode != target && elem!= target) {
+                            _recursive(elem.parentNode);
+                        }
+                    }
+                };
+                _recursive(t);
+            };
+            if(target.addEventListener){
+                target.addEventListener(type,_eventfn);
+            }else{
+                target.attachEvent("on"+type,_eventfn);
+            };
+        };
 
         //事件处理
         //组件区事件
         Class.prototype.comEvents = function(){
             var that = this,options = that.config;
-            options.comElem.on('mouseover', '.'+ DRAGINPUT, function(e){
-                $(this).css("background-color", "#e2e2e2");
+            that.addEventHandler(options.comElemOrgin,COM_EVENT,'mouseover', function(e){
+                this.style.backgroundColor = '#e2e2e2';
+                this.style.cursor = 'pointer';
             });
-            options.comElem.on('mouseout', '.'+ DRAGINPUT, function(e){
-                $(this).css("background-color", "");
+            that.addEventHandler(options.comElemOrgin,COM_EVENT,'mouseout', function(e){
+                this.style.backgroundColor = '';
             });
-            options.comElem.on('click', '*[' + COM_EVENT +']', function(e){
-                var othis = $(this),events = othis.attr(COM_EVENT),i = parseInt(othis.attr("type"));
-                //只进行数据的添加，渲染交给laytpl
-                //注意：必填属性默认为false。复选框、单选框没有必填的属性，为保证数据格式统一，仅在数据中添加了此属性，在实际的运用中并未适使用此属性
-                switch (i) {
-                    case 1:
-                        options.data.push({
-                            type: 'text',
-                            name: "输入框",
-                            required: false,
-                            placeholder: "请输入",
-                            soRt: options.data.length,
-                            field: ""
-                        });
-                        break;
-                    case 2:
-                        options.data.push({
-                            type: 'select',
-                            name: "下拉框",
-                            required: false,
-                            placeholder: "请选择",
-                            option: new Array(),
-                            soRt: options.data.length,
-                            field: ""
-                        });
-                        break;
-                    case 3:
-                        options.data.push({
-                            type: 'checkbox',
-                            name: "复选框",
-                            option: new Array(),
-                            required: false,
-                            soRt: options.data.length,
-                            field: ""
-                        });
-                        break;
-                    case 4:
-                        options.data.push({
-                            type: 'radio',
-                            name: "单选框",
-                            option: new Array(),
-                            required: false,
-                            soRt: options.data.length,
-                            field: ""
-                        });
-                        break;
-                    case 5:
-                        options.data.push({
-                            type: 'textarea',
-                            name: "文本域",
-                            placeholder: "请输入",
-                            required: false,
-                            soRt: options.data.length,
-                            field: ""
-                        });
-                        break;
-                    default:
-                        layer.msg("找不到对应的类型");
-                        break;
-                };
+            that.addEventHandler(options.comElemOrgin,COM_EVENT,'click', function(e){
+                var othis = this,type = othis.getAttribute("type");
+                options.data.push({
+                    type: type,
+                    name: type,
+                    required: false,
+                    placeholder: "",
+                    option: new Array(),
+                    soRt: options.data.length,
+                    field: ""
+                });
                 //每次数据更新后，重新渲染视图区
                 that.renderView();
             });
@@ -398,19 +410,17 @@ layui.define(['form','laytpl','layer'], function(exports){
         Class.prototype.viewEvents = function(){
 
             var that = this,options = that.config,_flag = true;
-
-
-            $(document).bind('contextmenu',function(e) {
+            options.viewElemOrgin.oncontextmenu = function(e){
                 return false;
+            }
+            that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'mouseover', function(e){
+                this.parentNode.style.backgroundColor = "#e2e2e2";
+                this.parentNode.style.cursor = 'pointer';
             });
-            options.viewElem.on('mouseover', '.'+ DRAGVIEW, function(e){
-                $(this).parent().css("background-color", "#e2e2e2");
-                e.stopPropagation();
+            that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'mouseout', function(e){
+                this.parentNode.style.backgroundColor = "";
             });
-            options.viewElem.on('mouseout', '.'+ DRAGVIEW, function(e){
-                $(this).parent().css("background-color", "");
-                e.stopPropagation();
-            });
+
             //视图区删除事件
             options.viewElem.on('click',  '*[' + VIEW_DEL_EVENT +']', function(e){
                 var i = $(this).attr("index");
@@ -628,6 +638,8 @@ layui.define(['form','laytpl','layer'], function(exports){
         Class.prototype.calculateCenter = function(item){
             return $(item).offset().top + $(item).scrollTop() + $(item).height()/2
         };
+
+
 
 
         //核心入口
