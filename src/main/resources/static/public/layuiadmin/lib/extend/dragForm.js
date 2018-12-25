@@ -256,7 +256,7 @@ layui.define(['form','laytpl','layer'], function(exports){
                 str = '',
                 _getStr = function(i,data){
 
-                    str += '<div class="layui-row"><div class="layui-col-md10 ' + DRAGVIEW +'"index="' + i +'" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false"><div class="layui-form-item">';
+                    str += '<div class="layui-row"><div class="layui-col-md10" index="' + i +'" ' + VIEW_EVENT +'="' + VIEW_EVENT_NAME + '" onselectstart="return false"><div class="layui-form-item">';
 
                     str +=  '<label class="layui-form-label">';
                     if(data.required){
@@ -270,10 +270,10 @@ layui.define(['form','laytpl','layer'], function(exports){
                         str += '<select name="' + data.field + '"';
                         str += data.required?' required lay-verify="required">':'>';
                         str += '<option value="">' + data.placeholder + '</option>';
-                        for(var i = 0 ; i < data.option.length ; i++){
-                            str += '<option value="' + data.option[i] +'">' + data.option[i] +'</option>';
+                        for(var j = 0 ; j < data.option.length ; j++){
+                            str += '<option value="' + data.option[j] +'">' + data.option[j] +'</option>';
                         }
-                        str += '</select>'
+                        str += '</select>';
                     }else if(data.type == 'textarea'){
 
                         str += '<textarea name="' + data.field + '" ';
@@ -282,10 +282,10 @@ layui.define(['form','laytpl','layer'], function(exports){
                         str += ' autocomplete="off" class="layui-textarea"></textarea>';
 
                     }else if(data.type == 'checkbox' || data.type == 'radio'){
-                        for(var j = 0 ; j < data.option.length ; j++){
+                        for(var m = 0 ; m < data.option.length ; m++){
                             str += '<input type="' + data.type +  '"';
                             str += (data.type == "checkbox")?' name="' + data.field +'[]"':' name="' + data.field + '"';
-                            str += ' title="' + data.option[j] +'"';
+                            str += ' title="' + data.option[m] +'"';
                             str += (data.type == "checkbox")?' lay-skin="primary">':'>';
                         }
                     }else{
@@ -302,14 +302,14 @@ layui.define(['form','laytpl','layer'], function(exports){
                     str += '</div>';
                 };
             that.dataSort();
-            str += '<form class="layui-form" id="' + VIEW_FORM_NAME +'" lay-filter="' + VIEW_FORM_NAME +'">';
+            str += '<form class="layui-form">';
             for(var i = 0 ; i < options.data.length ; i++){
                 _getStr(i,options.data[i])
             }
             str += '</form>';
             options.viewElemOrgin.innerHTML = str;
             // //借助layui.form重新渲染视图区
-            form.render(null,VIEW_FORM_NAME);
+            form.render();
 
         };
         //属性区渲染
@@ -357,28 +357,7 @@ layui.define(['form','laytpl','layer'], function(exports){
         };
 
 
-        //复写事件委托，并兼容IE
-        Class.prototype.addEventHandler = function(target,selector,type,fn){
-            var _eventfn = function(e){
-                var e = e || window.event;
-                var t = e.target || e.srcElement;
-                var _recursive = function(elem){
-                    if(elem.getAttribute(selector)){
-                        fn.call(elem,e);
-                    }else{
-                        if(elem.parentNode != target && elem!= target) {
-                            _recursive(elem.parentNode);
-                        }
-                    }
-                };
-                _recursive(t);
-            };
-            if(target.addEventListener){
-                target.addEventListener(type,_eventfn);
-            }else{
-                target.attachEvent("on"+type,_eventfn);
-            };
-        };
+
 
         //事件处理
         //组件区事件
@@ -408,11 +387,14 @@ layui.define(['form','laytpl','layer'], function(exports){
         };
         //视图区事件
         Class.prototype.viewEvents = function(){
-
-            var that = this,options = that.config,_flag = true;
+            var that = this,
+                options = that.config,
+                _flag = true;//拖动事件标志位
+            //视图区禁用浏览器自带事件
             options.viewElemOrgin.oncontextmenu = function(e){
                 return false;
-            }
+            };
+
             that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'mouseover', function(e){
                 this.parentNode.style.backgroundColor = "#e2e2e2";
                 this.parentNode.style.cursor = 'pointer';
@@ -420,104 +402,117 @@ layui.define(['form','laytpl','layer'], function(exports){
             that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'mouseout', function(e){
                 this.parentNode.style.backgroundColor = "";
             });
-
-            //视图区删除事件
-            options.viewElem.on('click',  '*[' + VIEW_DEL_EVENT +']', function(e){
-                var i = $(this).attr("index");
+            that.addEventHandler(options.viewElemOrgin,VIEW_DEL_EVENT,'click', function(e){
+                var i = this.getAttribute("index");
                 options.data.splice(i,1);
                 //重新渲染视图区
                 that.renderView();
                 //清空属性区
-                options.attrElem.html("");
-                e.stopPropagation();
+                options.attrElemOrgin.innerHTML = "";
             });
-            options.viewElem.on('dblclick','*[' + VIEW_EVENT +']', function(e){
-                $(this).parent().addClass("layui-bg-blue");
-                $(this).parent().siblings().removeClass("layui-bg-blue");
-                var i = $(this).attr("index");
+
+            that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'dblclick', function(e){
+                that.setCss(this.parentNode.parentNode.childNodes,'border',"");
+                this.parentNode.style.border = "1px dashed red";
+                var i = this.getAttribute("index");
                 that.renderAttr(i);
-                e.stopPropagation();
             });
 
-            options.viewElem.on('mousedown','*[' + VIEW_EVENT +']',function(e) {
-                if(_flag){
-                    var _index = $(this).attr("index"),
-                        _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
-                        _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: ' + $(this).parent().height() +'px;border: 1px dashed grey;">');
-
-                    //拖拽事件中可能所需的数据
-                    that.newIndex = _index;
-                    that.dragData = options.data[_index];
-                    that.dragDom = that.JQdomToStr($(this).parent().clone(true));
-                    that.placeholder = _PLACEHOLDER;
-                    that.mouseX = e.pageX;
+            that.addEventHandler(options.viewElemOrgin,VIEW_EVENT,'mousedown',function(e){
+                if(_flag && e.which == 3){
+                    var _i = this.getAttribute("index"),
+                        _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: ' + this.parentNode.offsetHeight +'px;border: 1px dashed grey;">');
+                    that.newIndex = _i;//获取当前点击得元素索引,添加到操作的实例上，在元素落下时，这个值会改变
+                    that.dragData = options.data[_i];//获取当前点击元素对应的数据，方便操作结束后插入数据
+                    that.placeholder = _PLACEHOLDER;//占位div
+                    that.mouseX = e.pageX;//当前鼠标落下的位置
                     that.mouseY = e.pageY;
+
                     that.posotionY = $(this).parent().position().top + $(this).parent().scrollTop();
-                    that.posotionX = $(this).parent().position().left + $(this).parent().scrollLeft();
 
-                    that.dragDom.setAttribute("style","position:absolute;left:" + that.posotionX +"px;top:" + that.posotionY +"px;z-index:800;width:" + $(this).parent().width() +"px;background-color:#e2e2e2 ;!important");
+                    // that.dragDom = this.parentNode.setAttribute("style","position:absolute;left:" + that.posotionX +"px;top:" + that.posotionY +"px;z-index:800;width:" + $(this).parent().width() +"px;background-color:#e2e2e2 ;!important");
 
-                //鼠标右键落下
-                if(e.which == 3){
-                        //TODO 拖拽事件优化
-                        that.rangeX = [options.viewElem.offset().left,options.viewElem.offset().left + options.viewElem.width()];
-                        that.rangeY = [options.viewElem.offset().top ,options.viewElem.offset().top + options.viewElem.height()];
-                        options.data.splice(_index,1);
-                        _flag = false;
-                        _viewElemOrgin.insertBefore(_PLACEHOLDER,_viewElemOrgin.children[_index]);
-                        $(this).parent().remove();
-                        var otherPosition = options.viewElem.children("form").children("div");
-                        that.centerPosition = new Array();
-                        for(var i = 0 ; i < otherPosition.length-1 ; i++){
-                            if(i == 0){
-                                that.centerPosition.push([options.viewElem.children("form").offset().top,that.calculateCenter(otherPosition[i])]);
-                            };
-                            that.centerPosition.push([that.calculateCenter(otherPosition[i]),that.calculateCenter(otherPosition[i+1])]);
-                        }
 
-                        _viewElemOrgin.appendChild(that.dragDom);
-
-                        //设置可编辑区样式
-                        options.viewElem.css("border","5px solid red");
-
-                        $(document).on("mousemove",function (e) {
-                            that.calculate(e);
-                        });
-                        $(document).on("mouseup",function (e) {
-                            options.data.splice(that.newIndex,0,that.dragData);
-                            $(that.placeholder).remove();
-                            $(that.dragDom).remove();
-                            //重新渲染视图区
-                            that.renderView();
-                            //清空属性区
-                            options.attrElem.html("");
-                            //标志位置空
-                            _flag = true;
-                            //清空监听事件
-                            $(document).off("mousemove");
-                            $(document).off("mouseup");
-                            //移除可编辑区样式
-                            options.viewElem.css("border","");
-                            //清空不必要的缓存
-                            delete that.newIndex;
-                            delete that.dragData;
-                            delete that.dragDom;
-                            delete that.placeholder;
-                            delete that.mouseX;
-                            delete that.mouseY;
-                            delete that.posotionY;
-                            delete that.posotionX;
-                            delete that.centerPosition;
-                            delete that.rangeY;
-                            delete that.rangeX;
-
-                        })
                 }
-                }
-                return false;
             });
 
-
+            // options.viewElem.on('mousedown','*[' + VIEW_EVENT +']',function(e) {
+            //     if(_flag){
+            //         var _index = $(this).attr("index"),
+            //             _viewElemOrgin = document.getElementById(options.viewElem.selector.replace("#","")).children[0],
+            //             _PLACEHOLDER = that.strToDom('<div class="layui-row" style="height: ' + $(this).parent().height() +'px;border: 1px dashed grey;">');
+            //
+            //         //拖拽事件中可能所需的数据
+            //         that.newIndex = _index;
+            //         that.dragData = options.data[_index];
+            //         that.dragDom = that.JQdomToStr($(this).parent().clone(true));
+            //         that.placeholder = _PLACEHOLDER;
+            //         that.mouseX = e.pageX;
+            //         that.mouseY = e.pageY;
+            //         that.posotionY = $(this).parent().position().top + $(this).parent().scrollTop();
+            //         that.posotionX = $(this).parent().position().left + $(this).parent().scrollLeft();
+            //
+            //         that.dragDom.setAttribute("style","position:absolute;left:" + that.posotionX +"px;top:" + that.posotionY +"px;z-index:800;width:" + $(this).parent().width() +"px;background-color:#e2e2e2 ;!important");
+            //
+            //     //鼠标右键落下
+            //     if(e.which == 3){
+            //             //TODO 拖拽事件优化
+            //             that.rangeX = [options.viewElem.offset().left,options.viewElem.offset().left + options.viewElem.width()];
+            //             that.rangeY = [options.viewElem.offset().top ,options.viewElem.offset().top + options.viewElem.height()];
+            //             options.data.splice(_index,1);
+            //             _flag = false;
+            //             _viewElemOrgin.insertBefore(_PLACEHOLDER,_viewElemOrgin.children[_index]);
+            //             $(this).parent().remove();
+            //             var otherPosition = options.viewElem.children("form").children("div");
+            //             that.centerPosition = new Array();
+            //             for(var i = 0 ; i < otherPosition.length-1 ; i++){
+            //                 if(i == 0){
+            //                     that.centerPosition.push([options.viewElem.children("form").offset().top,that.calculateCenter(otherPosition[i])]);
+            //                 };
+            //                 that.centerPosition.push([that.calculateCenter(otherPosition[i]),that.calculateCenter(otherPosition[i+1])]);
+            //             }
+            //
+            //             _viewElemOrgin.appendChild(that.dragDom);
+            //
+            //             //设置可编辑区样式
+            //             options.viewElem.css("border","5px solid red");
+            //
+            //             $(document).on("mousemove",function (e) {
+            //                 that.calculate(e);
+            //             });
+            //             $(document).on("mouseup",function (e) {
+            //                 options.data.splice(that.newIndex,0,that.dragData);
+            //                 $(that.placeholder).remove();
+            //                 $(that.dragDom).remove();
+            //                 //重新渲染视图区
+            //                 that.renderView();
+            //                 //清空属性区
+            //                 options.attrElem.html("");
+            //                 //标志位置空
+            //                 _flag = true;
+            //                 //清空监听事件
+            //                 $(document).off("mousemove");
+            //                 $(document).off("mouseup");
+            //                 //移除可编辑区样式
+            //                 options.viewElem.css("border","");
+            //                 //清空不必要的缓存
+            //                 delete that.newIndex;
+            //                 delete that.dragData;
+            //                 delete that.dragDom;
+            //                 delete that.placeholder;
+            //                 delete that.mouseX;
+            //                 delete that.mouseY;
+            //                 delete that.posotionY;
+            //                 delete that.posotionX;
+            //                 delete that.centerPosition;
+            //                 delete that.rangeY;
+            //                 delete that.rangeX;
+            //
+            //             })
+            //     }
+            //     }
+            //     return false;
+            // });
         };
         //属性区事件
         Class.prototype.attrEvents = function(){
@@ -604,6 +599,35 @@ layui.define(['form','laytpl','layer'], function(exports){
                 div.innerHTML = str ;
             return div.childNodes[0].cloneNode(true);
         };
+
+        //重写事件委托，并兼容IE
+        Class.prototype.addEventHandler = function(target,selector,type,fn){
+        var _eventfn = function(e){
+            var e = e || window.event;
+            var t = e.target || e.srcElement;
+            var _recursive = function(elem){
+                if(elem.getAttribute(selector)){
+                    fn.call(elem,e);
+                }else{
+                    if(elem.parentNode != target && elem!= target) {
+                        _recursive(elem.parentNode);
+                    }
+                }
+            };
+            _recursive(t);
+        };
+        if(target.addEventListener){
+            target.addEventListener(type,_eventfn);
+        }else{
+            target.attachEvent("on"+type,_eventfn);
+        };
+    };
+        //批量设置子元素样式
+        Class.prototype.setCss = function(nodeList,css,value){
+        for(var i = 0 ; i < nodeList.length ;i++){
+            nodeList[i].style[css] = value;
+        }
+    };
 
         //计算拖拽DIV当前位置
         Class.prototype.calculate = function(e){
