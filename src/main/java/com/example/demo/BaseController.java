@@ -14,4 +14,9 @@ public class BaseController {
     public String test() {
         return "views/test";
     }
+
+    @GetMapping("/paper")
+    public String paper() {
+        return "views/paper";
+    }
 }
