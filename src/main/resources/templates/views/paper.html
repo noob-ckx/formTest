@@ -21,9 +21,7 @@
             <div class="layui-card-body" id="test">
 
             </div>
-            <div class="layui-form">
-                <input type="checkbox" name="" title="全选" lay-skin="primary" lay-filter="ceshi">
-            </div>
+
         </div>
     </div>
 </div>
@@ -31,20 +29,24 @@
        <div class="layui-row">
            <div class="layui-col-md12">
                <span><i class="layui-icon layui-icon-search"></i></span>
-               <span style="font-size: 16px;"><b>{{d.name}}</b></span>
+               <span style="font-size: 16px;"><b paper-event="link">{{d.name}}</b></span>
                <span class="layui-badge layui-bg-orange">橙</span>
                <span class="layui-badge layui-bg-green">绿</span>
            </div>
+           <button class="layui-btn layui-btn-sm" paper-event="add" >添加</button>
        </div>
 </script>
 
-<script type="text/html" id="toolbar">
+
+<script type="text/html" id="batchBar">
     <div class="layui-row">
         <div class="layui-col-md12">
-            <button class="layui-btn layui-btn-sm" paper-event="add" >添加</button>
+            <button class="layui-btn layui-btn-sm" data-method="add">添加</button>
         </div>
     </div>
 </script>
+
+
 
 
 <script type="text/javascript" data-th-inline="javascript">
@@ -63,20 +65,29 @@
 
 
         paperList.render({
-            elem:'#test',
+            elem:'#test',//渲染挂在元素的位置
             data:data,
-            contentElem:'#tpl',
-            btnElem:'#toolbar',
-            select:true
-        })
+            contentElem:'#tpl',//主体内容模板
+            select:true,//是否开启选择
+            batchBarElem:'#batchBar'//头部按钮模板
+        });
 
         paperList.on('tool',function(d){
-            console.log(d)
-        })
-
-        form.on('checkbox(ceshi)', function(data){
-            paperList.setSelect(true)
+            // console.log(d)
         });
+
+        paperList.on('select',function(d){
+            // console.log(d)
+        });
+
+
+
+        paperList.on('batchBar',function(d){
+            // console.log(d);
+            // console.log(paperList.getStatus())
+        });
+
+
 
     });
 
