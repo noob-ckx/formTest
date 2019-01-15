@@ -16,12 +16,19 @@
         <div class="layui-card">
             <div class="layui-card-header">
                 论文列表
-
+                <button class="layui-btn layui-btn-sm" id="add">添加</button>
             </div>
-            <div class="layui-card-body" id="test">
-
+            <div class="layui-card-body" >
+                <div class="layui-row">
+                    <div class="layui-col-md6">
+                        <div id="test"></div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div id="message"></div>
+                    </div>
+                    <div id="ceshi"></div>
+                </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -41,7 +48,7 @@
 <script type="text/html" id="batchBar">
     <div class="layui-row">
         <div class="layui-col-md12">
-            <button class="layui-btn layui-btn-sm" data-method="add">添加</button>
+
         </div>
     </div>
 </script>
@@ -63,29 +70,55 @@
             laytpl = layui.laytpl;
         var data = [{name:"a",status:2,keyword:['测试1','测试2'],search:['研究方向1','研究方向1']},{name:"b",status:1,keyword:['测试2','测试3'],search:['研究方向2','研究方向2']}];
 
+        var datas = [{name:"c",status:2,keyword:['测试8','测试8'],search:['研究方向8','研究方向8']},{name:"d",status:1,keyword:['测试10','测试10'],search:['研究方向10','研究方向10']}];
 
         paperList.render({
             elem:'#test',//渲染挂在元素的位置
             data:data,
             contentElem:'#tpl',//主体内容模板
             select:true,//是否开启选择
-            batchBarElem:'#batchBar'//头部按钮模板
+            batchBarElem:'#batchBar'
         });
 
-        paperList.on('tool',function(d){
-            // console.log(d)
+        paperList.render({
+            elem:'#message',//渲染挂在元素的位置
+            data:datas,
+            contentElem:'#tpl',//主体内容模板
+            select:true,//是否开启选择
+            batchBarElem:'#batchBar'
         });
+        paperList.on("tool(test)",function(d){
+            console.log(d);
+        })
 
-        paperList.on('select',function(d){
-            // console.log(d)
-        });
+        paperList.on("tool(message)",function(d){
+            console.log(d);
+        })
+
+        paperList.on("select(test)",function(d){
+            console.log(d);
+        })
+
+        paperList.on("select(message)",function(d){
+            console.log(d);
+        })
+
+        paperList.on("allSelect(test)",function(d){
+            console.log(d)
+        })
+        paperList.on("allSelect(message)",function(d){
+            console.log(d)
+        })
+        $("#add").click(function(){
+            paperList.reload('message',{
+                data:data,
+                select:false
+            });
+            console.log(paperList.checkStatus("test"))
+        })
+        console.log();
 
 
-
-        paperList.on('batchBar',function(d){
-            // console.log(d);
-            // console.log(paperList.getStatus())
-        });
 
 
 
