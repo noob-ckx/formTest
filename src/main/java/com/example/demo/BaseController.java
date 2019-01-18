@@ -19,4 +19,9 @@ public class BaseController {
     public String paper() {
         return "views/paper";
     }
+
+    @GetMapping("/search")
+    public String search() {
+        return "views/search";
+    }
 }
