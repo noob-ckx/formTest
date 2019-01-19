@@ -19,4 +19,9 @@ public class BaseController {
     public String paper() {
         return "views/paper";
     }
+
+    @GetMapping("/layer")
+    public String layer() {
+        return "views/layer";
+    }
 }

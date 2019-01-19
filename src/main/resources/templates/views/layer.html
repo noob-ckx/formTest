@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>form</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link th:href="@{/public/layuiadmin/layui/css/layui.css}" rel="stylesheet" />
+    <link th:href="@{/public/layuiadmin/style/admin.css}" rel="stylesheet" />
+    <link th:href="@{/public/font-awesome-4.7.0/css/font-awesome.min.css}" rel="stylesheet" />
+    <script th:src="@{/public/js/disable-key.js}"></script>
+    <script th:src="@{http://pv.sohu.com/cityjson}"></script>
+    <script th:src="@{/public/layuiadmin/layui/layui.js}"></script>
+    <script th:src="@{/public/layuiadmin/layui-xtree/layui-xtree.js}"></script>
+    <script th:src="@{/public/layuiadmin/layui-xtree/basic-tree.js}"></script>
+    <script th:src="@{/public/layuiadmin/layui-xtree/checkbox-tree.js}"></script>
+</head>
+<body>
+<div class="layui-fluid">
+        <button id="a">测试</button>
+</div>
+<script type="text/javascript" data-th-inline="javascript">
+    var root = /*[[${#request.getContextPath()}]]*/"";
+    layui.config({
+        base: root + '/public/layuiadmin/' //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index'], function () {
+        var $ = layui.$,
+            admin = layui.admin;
+
+        $("#a").click(function(){
+            admin.popupLeft({
+                title: ['任务列表', 'background-color:white;'],
+                type: 2,
+                offset:['50px','-80%'],
+                area:'80%',
+                content: root + "/",
+                end: function () {
+
+                }
+            });
+        })
+
+
+    });
+
+</script>
+</body>
+</html>
+

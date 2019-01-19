@@ -126,7 +126,7 @@ html{background-color: #f2f2f2; color: #666;}
 
 /* 右侧面板 */
 .layui-layer-adminRight{top: 50px !important; bottom: 0; box-shadow: 1px 1px 10px rgba(0,0,0,.1); border-radius: 0; overflow: auto;}
-
+.layui-layer-adminLeft{top: 50px !important; bottom: 0; box-shadow: 1px 1px 10px rgba(0,0,0,.1); border-radius: 0; overflow: auto;}
 /* 弹出便签 */
 .layadmin-note .layui-layer-content{padding: 0;}
 .layadmin-note textarea{display: block; width: 300px; height: 132px; min-width: 300px; min-height: 132px; line-height: 20px; padding: 10px 20px; border: none; box-sizing: border-box; color: #666; word-wrap: break-word;}
@@ -483,7 +483,7 @@ html{background-color: #f2f2f2; color: #666;}
 }
 .layui-anim-rl{-webkit-animation-name: layui-rl; animation-name: layui-rl;}
 
-@-webkit-keyframes layui-lr{ /* 从右往左滑入 */
+@-webkit-keyframes layui-lr{ /* 从左往右滑入 */
   from {-webkit-transform: translate3d(0 0, 0); opacity: 1;}
   to {-webkit-transform: translate3d(100%, 0, 0); opacity: 1;}
 }
@@ -495,6 +495,7 @@ html{background-color: #f2f2f2; color: #666;}
 
 .layui-anim-rl.layer-anim-close{-webkit-animation-name: layui-lr; animation-name: layui-lr;}
 
+.layui-anim-lr.layer-anim-close{-webkit-animation-name: layui-rl; animation-name: layui-rl;}
 
 /* 提示页 */
 .layadmin-tips{margin-top: 30px; text-align: center;}
