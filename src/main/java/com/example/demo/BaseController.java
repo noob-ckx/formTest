@@ -24,4 +24,9 @@ public class BaseController {
     public String layer() {
         return "views/layer";
     }
+
+    @GetMapping("/search")
+    public String search() {
+        return "views/search";
+    }
 }
